@@ -1,0 +1,83 @@
+configfile: 'config.yaml'
+
+rule all:
+  input:
+#     expand('insert_sz/{sample}_insert_sz.pdf', sample=config['samples']),
+#     expand('fastqc/{sample}_R1_001_fastqc.html', sample=config['samples']),
+    expand('flagstat/{sample}_mapped_flagstat.txt', sample=config['samples']),
+    expand('flagstat/{sample}_rmdup_flagstat.txt', sample=config['samples'])
+
+rule fastqc:
+  input:
+    r1 = 'reads/{sample}_R1_001.fastq.gz',
+    r2 = 'reads/{sample}_R2_001.fastq.gz'
+  output:
+    o1 = 'fastqc/{sample}_R1_001_fastqc.html',
+    o2 = 'fastqc/{sample}_R2_001_fastqc.html'
+  params:
+    'fastqc'
+  shell:
+    '{config[fastqc]} {input.r1} {input.r2} -o {params}'
+
+rule map_reads:
+  input:
+    ref = config['ref'],
+    r1 = 'reads/{sample}_R1_001.fastq.gz',
+    r2 = 'reads/{sample}_R2_001.fastq.gz'
+  output:
+    temp('mapped_reads/{sample}.sam')
+  threads: 15
+  log:
+    'logs/{sample}_bwa.log'
+  benchmark:
+    'logs/{sample}_bwa.benchmark'
+  shell:
+    '{config[bwa]} mem -t {threads} {input.ref} {input.r1} {input.r2} '
+    '1> {output} 2> {log}'
+
+rule flagstat_mapped:
+  input:
+    'mapped_reads/{sample}.sam'
+  output:
+    'flagstat/{sample}_mapped_flagstat.txt'
+  shell:
+    'samtools flagstat {input} > {output}'
+
+rule sort_reads:
+  input:
+    'mapped_reads/{sample}.sam'
+  output:
+    'mapped_reads/{sample}_sorted.bam'
+  threads: 15
+  shell:
+    'samtools sort -@ {threads} -o {output} {input}'
+
+rule rmdup:
+  input:
+    'mapped_reads/{sample}_sorted.bam'
+  output:
+    'mapped_reads/{sample}_rmdup.bam'
+  shell:
+    'samtools rmdup {input} {output}'
+
+rule flagstat_rmdup:
+  input:
+    'mapped_reads/{sample}_rmdup.bam'
+  output:
+    'flagstat/{sample}_rmdup_flagstat.txt'
+  shell:
+    'samtools flagstat {input} > {output}'
+
+rule insert_sz:
+  input:
+    'mapped_reads/{sample}_rmdup.sam'
+  output:
+    pdf = 'insert_sz/{sample}_insert_sz.pdf',
+    txt = 'insert_sz/{sample}_insert_sz.txt'
+  log:
+    'logs/{sample}_picard.log'
+  benchmark:
+    'logs/{sample}_picard.benchmark'
+  shell:
+    'java -jar {config[picard]} CollectInsertSizeMetrics I={input} '
+    'O={output.txt} H={output.pdf} 2> {log}'

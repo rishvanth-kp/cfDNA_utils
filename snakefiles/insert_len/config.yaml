@@ -1,0 +1,12 @@
+fastqc: /staging/as/kaliappa/tmp/fastqc/FastQC/fastqc
+bwa: /staging/as/kaliappa/bwa/bwa-0.7.17/bwa
+ref: /home/cmb-panasas2/kaliappa/data/hg19/bwa/hg19.fa
+picard: /staging/as/kaliappa/tmp/picard/picard.jar
+
+samples:
+  - test
+  - SE5427_FT-SA35157_S111_L008
+  - SE5427_FT-SA35158_S112_L008
+  - SE5427_FT-SA35159_S113_L008
+  - SE5427_FT-SA35160_S114_L008
+  - SE5427_FT-SA35161_S115_L008
