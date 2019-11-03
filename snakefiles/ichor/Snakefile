@@ -1,0 +1,112 @@
+rule all:
+  input:
+    expand('fastqc/{sample}_R1_001_fastqc.html', sample=config['samples']),
+    expand('map_stats/{sample}_stats.txt', sample=config['samples']),
+    expand('cna/{sample}/{sample}.cna.seg', sample=config['samples'])
+
+rule fastqc:
+  input:
+    'reads/{sample}_R1_001.fastq.gz'
+  output:
+    'fastqc/{sample}_R1_001_fastqc.html'
+  params:
+    'fastqc'
+  shell:
+    '{config[fastqc]} {input} -o {params}'
+
+rule mapReads:
+  input:
+    ref = config['ref'],
+    reads = 'reads/{sample}_R1_001.fastq.gz'
+  output:
+    sam = temp('mapped_reads/{sample}.sam')
+  threads: 15
+  log:
+    'logs/{sample}_bwa.log'
+  benchmark:
+    'logs/{sample}_bwa.benchmark'
+  shell:
+    '{config[bwa]} mem -t {threads} {input.ref} {input.reads} '
+    '1> {output.sam} 2> {log}; '
+
+rule postProcessReads:
+  input:
+    'mapped_reads/{sample}.sam'
+  output:
+    bam = 'mapped_reads/{sample}.bam',
+    bamFlagstat = 'flagstat/{sample}_flagstat.txt',
+    sortedBam = temp('mapped_reads/{sample}_sorted.bam'),
+    rmdupBam = temp('mapped_reads/{sample}_rmdup.bam'),
+    rmdupFlagstat = 'flagstat/{sample}_rmdup_flagstat.txt',
+    mq10Bam = 'mapped_reads/{sample}_mq10.bam',
+    mq10Flagstat = 'flagstat/{sample}_mq10_flagstat.txt',
+    bamIndex = 'mapped_reads/{sample}_mq10.bam.bai'
+  threads: 15
+  params:
+    sortPrefix = 'mapped_reads/{sample}_sorted',
+    mapq = 10
+  shell:
+    # convert to bam
+    'samtools view -@ {threads} -b -S -o {output.bam} {input}; '
+    'samtools flagstat {output.bam} > {output.bamFlagstat}; '
+    # sort
+    'samtools sort -@ {threads} {output.bam} {params.sortPrefix}; '
+    # remove duplicates
+    'samtools rmdup -s {output.sortedBam} {output.rmdupBam}; '
+    'samtools flagstat {output.rmdupBam} > {output.rmdupFlagstat}; '
+    # remove ambiguous reads
+    'samtools view -@ {threads} -b -q {params.mapq} '
+    '-o {output.mq10Bam} {output.rmdupBam}; '
+    'samtools flagstat {output.mq10Bam} > {output.mq10Flagstat}; '
+    # index bam
+    'samtools index {output.mq10Bam}'
+
+rule printMapStats:
+  input:
+    m = 'flagstat/{sample}_flagstat.txt',
+    u = 'flagstat/{sample}_rmdup_flagstat.txt'
+  output:
+    'map_stats/{sample}_stats.txt'
+  shell:
+    '{config[mapStats]} -s {wildcards.sample} -m {input.m} '
+    '-u {input.u} > {output}'
+
+rule readCounter:
+  input:
+    'mapped_reads/{sample}_mq10.bam'
+  output:
+    'cna/{sample}/{sample}.wig'
+  params:
+    binSize = config['readCounterBinSize'],
+    chrs = config['readCounterChrs']
+  shell:
+    # 'mkdir cna/{wildcards.sample}; '
+    '{config[readCounter]} --window {params.binSize} '
+    '--chromosome "{params.chrs}" {input} > {output}'
+
+rule ichorCna:
+  input:
+    'cna/{sample}/{sample}.wig'
+  output:
+    'cna/{sample}/{sample}.cna.seg'
+  log:
+    'cna/{sample}/{sample}.log'
+  params:
+    sample = '{sample}',
+    outdir = './cna/{sample}',
+    gcWig = config['ichorGcWig'],
+    mapWig = config['ichorMapWig'],
+    centromere = config['ichorCentromere'],
+    ploidy = config['ichorPloidy'],
+    normal = config['ichorNormal'],
+    maxCn = config['ichorMaxCn'],
+    scStates = config['ichorScStates'],
+    txnE = config['ichorTxnE'],
+    txnStrength = config['ichorTxnStrength']
+  shell:
+    'Rscript {config[ichor]} --WIG {input} --id {params.sample} '
+    '--gcWig {params.gcWig} --mapWig {params.mapWig} '
+    '--centromere {params.centromere} --ploidy "{params.ploidy}" '
+    '--normal "{params.normal}" --maxCN {params.maxCn} '
+    '--scStates "{params.scStates}" --txnE {params.txnE} '
+    '--txnStrength {params.txnStrength} --outDir {params.outdir} &> {log}'
