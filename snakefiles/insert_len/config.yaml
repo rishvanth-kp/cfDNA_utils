@@ -1,12 +1,9 @@
-fastqc: /staging/as/kaliappa/tmp/fastqc/FastQC/fastqc
-bwa: /staging/as/kaliappa/bwa/bwa-0.7.17/bwa
-ref: /home/cmb-panasas2/kaliappa/data/hg19/bwa/hg19.fa
-picard: /staging/as/kaliappa/tmp/picard/picard.jar
+fastqc: /scratch2/kaliappa/tools/fastqc/FastQC/fastqc
+bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
+ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
+picard: /scratch2/kaliappa/tools/picard/picard.jar
+
+minMapq: 30
 
 samples:
-  - test
-  - SE5427_FT-SA35157_S111_L008
-  - SE5427_FT-SA35158_S112_L008
-  - SE5427_FT-SA35159_S113_L008
-  - SE5427_FT-SA35160_S114_L008
-  - SE5427_FT-SA35161_S115_L008
+  - CHLA_RR_023_OS_DX

@@ -1,14 +1,22 @@
 __default__:
-  partition: 'cmb'
-  time: '24:00:00'
+  time: '1:00:00'
   mem: '8gb'
   cores: 1
   logout: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.out'
   logerror: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.err'
+  acc: 'lc_lx1'
 
-map_reads:
-  cores: 16
-  mem: '64gb'
+mapReads:
+  time: '8:00:00'
+  cores: 8
+  mem: '32gb'
 
-sort_reads:
-  cores: 16
+sortReads:
+  time: '8:00:00'
+  cores: 8
+  mem: '32gb'
+
+rmAmbigReads:
+  time: '8:00:00'
+  cores: 8
+  mem: '32gb'

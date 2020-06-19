@@ -1,11 +1,7 @@
-configfile: 'config.yaml'
-
 rule all:
   input:
-#     expand('insert_sz/{sample}_insert_sz.pdf', sample=config['samples']),
-#     expand('fastqc/{sample}_R1_001_fastqc.html', sample=config['samples']),
-    expand('flagstat/{sample}_mapped_flagstat.txt', sample=config['samples']),
-    expand('flagstat/{sample}_rmdup_flagstat.txt', sample=config['samples'])
+    expand('fastqc/{sample}_R1_001_fastqc.html', sample=config['samples']),
+    expand('insert_sz/{sample}_insert_sz.pdf', sample=config['samples'])
 
 rule fastqc:
   input:
@@ -19,14 +15,14 @@ rule fastqc:
   shell:
     '{config[fastqc]} {input.r1} {input.r2} -o {params}'
 
-rule map_reads:
+rule mapReads:
   input:
     ref = config['ref'],
     r1 = 'reads/{sample}_R1_001.fastq.gz',
     r2 = 'reads/{sample}_R2_001.fastq.gz'
   output:
     temp('mapped_reads/{sample}.sam')
-  threads: 15
+  threads: 8
   log:
     'logs/{sample}_bwa.log'
   benchmark:
@@ -35,24 +31,16 @@ rule map_reads:
     '{config[bwa]} mem -t {threads} {input.ref} {input.r1} {input.r2} '
     '1> {output} 2> {log}'
 
-rule flagstat_mapped:
-  input:
-    'mapped_reads/{sample}.sam'
-  output:
-    'flagstat/{sample}_mapped_flagstat.txt'
-  shell:
-    'samtools flagstat {input} > {output}'
-
-rule sort_reads:
+rule sortReads:
   input:
     'mapped_reads/{sample}.sam'
   output:
     'mapped_reads/{sample}_sorted.bam'
-  threads: 15
+  threads: 8
   shell:
     'samtools sort -@ {threads} -o {output} {input}'
 
-rule rmdup:
+rule rmdupReads:
   input:
     'mapped_reads/{sample}_sorted.bam'
   output:
@@ -60,17 +48,21 @@ rule rmdup:
   shell:
     'samtools rmdup {input} {output}'
 
-rule flagstat_rmdup:
+rule rmAmbigReads:
   input:
     'mapped_reads/{sample}_rmdup.bam'
   output:
-    'flagstat/{sample}_rmdup_flagstat.txt'
+    'mapped_reads/{sample}_unique.bam'
+  threads: 8
+  params:
+    minMapq = config['minMapq']
   shell:
-    'samtools flagstat {input} > {output}'
+    'samtools view -@ {threads} -b -q {params.minMapq} -o {output} '
+    '{input}'
 
-rule insert_sz:
+rule insertSz:
   input:
-    'mapped_reads/{sample}_rmdup.sam'
+    'mapped_reads/{sample}_unique.bam'
   output:
     pdf = 'insert_sz/{sample}_insert_sz.pdf',
     txt = 'insert_sz/{sample}_insert_sz.txt'
