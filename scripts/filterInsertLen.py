@@ -22,19 +22,22 @@ import pysam
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--in-sam-file', dest='inSamFile', 
+    parser.add_argument('-s', '--in-sam-file', dest='inSamFile',
                         required=True, help='paired-end sam file')
     parser.add_argument('-l', '--min-insert-len', dest='minInsertLen', type=int,
                         required=True, help='min insert len to output')
+    parser.add_argument('-u', '--max-insert-len', dest='maxInsertLen', type=int,
+                        required=True, help='max insert len to output')
     parser.add_argument('-o', '--out-sam-file', dest='outSamFile',
                         required=True, help='output sam file')
     args = parser.parse_args()
 
     inSamFile = pysam.AlignmentFile(args.inSamFile, 'r', check_sq=False)
     outSamFile = pysam.AlignmentFile(args.outSamFile, 'w', template=inSamFile)
-    
+
     for read in inSamFile.fetch():
-        if abs(read.template_length) >= args.minInsertLen:
+        if (abs(read.template_length) >= args.minInsertLen
+            and abs(read.template_length) <= args.maxInsertLen):
             outSamFile.write(read)
 
 if __name__ == '__main__':

@@ -1,0 +1,30 @@
+readsDir: /scratch2/kaliappa/cfdna/cna_size_select/reads
+read1Suffix: _R1_001.fastq.gz
+read2Suffix: _R2_001.fastq.gz
+
+fastqc: /scratch2/kaliappa/tools/fastqc/FastQC/fastqc
+
+bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
+ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
+
+nThreads: 16
+
+minMapq: 30
+
+chromSizes:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/data/hg19.chrom.sizes
+binBounds:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/data/bins_5k_hg19.bed
+gc:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/data/bins_5k_hg19_gc.txt
+badBins:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/data/bins_5k_hg19_exclude.txt
+binCounts:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/getBinCounts.py
+cbs:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/cnvAnalysis.R
+
+minInsertLen: 90
+maxInsertLen: 150
+filterInsertLen:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/filterInsertLen.py
