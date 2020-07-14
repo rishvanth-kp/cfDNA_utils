@@ -28,6 +28,7 @@ samples = unique(samples)
 rule all:
   input:
     expand('fastqc/{sample}_R1_001_fastqc.html', sample=samples),
+    expand('insert_sz/{sample}_insert_sz.pdf', sample=samples),
     expand('cna/{sample}.pdf', sample=samples),
     expand('cna_size_selected/{sample}_size_selected.pdf', sample=samples)
 
@@ -103,6 +104,20 @@ rule removeMates:
   shell:
     'samtools view -f 0x40 -h -@ {threads} -o {output.sam} {input}; '
     'samtools flagstat {output.sam} > {output.flagstat}'
+
+rule insertSz:
+  input:
+    'mapped_reads/{sample}_unique.bam'
+  output:
+    pdf = 'insert_sz/{sample}_insert_sz.pdf',
+    txt = 'insert_sz/{sample}_insert_sz.txt'
+  log:
+    'logs/{sample}_picard.log'
+  benchmark:
+    'logs/{sample}_picard.benchmark'
+  shell:
+    'java -jar {config[picard]} CollectInsertSizeMetrics I={input} '
+    'O={output.txt} H={output.pdf} 2> {log}'
 
 rule cnaAnalysis:
   input:

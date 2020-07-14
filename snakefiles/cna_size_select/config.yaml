@@ -11,6 +11,8 @@ nThreads: 16
 
 minMapq: 30
 
+picard: /scratch2/kaliappa/tools/picard/picard.jar
+
 chromSizes:
   /scratch2/kaliappa/cfdna/cfDNA_utils/data/hg19.chrom.sizes
 binBounds:
@@ -24,7 +26,7 @@ binCounts:
 cbs:
   /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/cnvAnalysis.R
 
-minInsertLen: 90
+minInsertLen: 0
 maxInsertLen: 150
 filterInsertLen:
   /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/filterInsertLen.py
