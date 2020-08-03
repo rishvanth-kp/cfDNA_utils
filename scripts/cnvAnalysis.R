@@ -345,7 +345,7 @@ main <- function() {
   ## Number of standard deviations between mean ratio to keep a segment
   kStandardDev <- 0.5
   ## Minimum number of bins for a changed segment
-  kMinWidth <- 4
+  kMinWidth <- 3
 
   args = commandArgs(trailingOnly=TRUE)
   if (length(args) != 5) {
