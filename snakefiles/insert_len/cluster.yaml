@@ -1,22 +1,15 @@
 __default__:
-  time: '4:00:00'
+  time: '1:00:00'
   mem: '8gb'
   cores: 1
   logout: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.out'
   logerror: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.err'
-  acc: 'lc_lx'
+  acc: lc_lx1
 
 mapReads:
-  time: '8:00:00'
-  cores: 8
-  mem: '16gb'
+  cores: 16
+  mem: '32gb'
 
-sortReads:
-  time: '8:00:00'
-  cores: 8
-  mem: '16gb'
-
-rmAmbigReads:
-  time: '8:00:00'
-  cores: 8
-  mem: '16gb'
+postProcessMaps:
+  cores: 16
+  mem: '33gb'

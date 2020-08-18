@@ -1,9 +1,15 @@
+readsDir: /scratch2/kaliappa/cfdna/rb/frag_len_aug27/reads
+read1Suffix: _R1_001.fastq.gz
+read2Suffix: _R2_001.fastq.gz
+
+nThreads: 16  
+
 fastqc: /scratch2/kaliappa/tools/fastqc/FastQC/fastqc
+
 bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
 ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
-picard: /scratch2/kaliappa/tools/picard/picard.jar
 
 minMapq: 30
 
-samples:
-  - CHLA_RR_023_OS_DX
+
+picard: /scratch2/kaliappa/tools/picard/picard.jar

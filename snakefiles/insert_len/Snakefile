@@ -1,12 +1,39 @@
+# Copyright (C) 2020 Rishvanth Prabakar
+#
+# Authors: Rish Prabakar
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+from glob import glob
+from numpy import unique
+
+reads = glob('{}/*'.format(config['readsDir']))
+samples = []
+for i in reads:
+  sampleName = i.replace('{}/'.format(config['readsDir']), '')
+  sampleName = sampleName.replace('{}'.format(config['read1Suffix']), '')
+  sampleName = sampleName.replace('{}'.format(config['read2Suffix']), '')
+  samples.append(sampleName)
+
+samples = unique(samples)
+
 rule all:
   input:
-    expand('fastqc/{sample}_R1_001_fastqc.html', sample=config['samples']),
-    expand('insert_sz/{sample}_insert_sz.pdf', sample=config['samples'])
+#     expand('fastqc/{sample}_R1_001_fastqc.html', sample=samples),
+    expand('insert_sz/{sample}_insert_sz.pdf', sample=samples)
 
 rule fastqc:
   input:
-    r1 = 'reads/{sample}_R1_001.fastq.gz',
-    r2 = 'reads/{sample}_R2_001.fastq.gz'
+    r1 = config['readsDir'] + '/{sample}_R1_001.fastq.gz',
+    r2 = config['readsDir'] + '/{sample}_R2_001.fastq.gz'
   output:
     o1 = 'fastqc/{sample}_R1_001_fastqc.html',
     o2 = 'fastqc/{sample}_R2_001_fastqc.html'
@@ -18,51 +45,54 @@ rule fastqc:
 rule mapReads:
   input:
     ref = config['ref'],
-    r1 = 'reads/{sample}_R1_001.fastq.gz',
-    r2 = 'reads/{sample}_R2_001.fastq.gz'
+    r1 = config['readsDir'] + '/{sample}_R1_001.fastq.gz',
+    r2 = config['readsDir'] + '/{sample}_R2_001.fastq.gz'
   output:
-    temp('mapped_reads/{sample}.sam')
-  threads: 8
+    sam = 'mapped_reads/{sample}.sam',
+    flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
+  threads: config['nThreads']
   log:
     'logs/{sample}_bwa.log'
   benchmark:
     'logs/{sample}_bwa.benchmark'
   shell:
     '{config[bwa]} mem -t {threads} {input.ref} {input.r1} {input.r2} '
-    '1> {output} 2> {log}'
+    '1> {output.sam} 2> {log}; '
+    'samtools flagstat {output.sam} > {output.flagstat}'
 
-rule sortReads:
+rule postProcessMaps:
   input:
     'mapped_reads/{sample}.sam'
   output:
-    'mapped_reads/{sample}_sorted.bam'
-  threads: 8
-  shell:
-    'samtools sort -@ {threads} -o {output} {input}'
-
-rule rmdupReads:
-  input:
-    'mapped_reads/{sample}_sorted.bam'
-  output:
-    'mapped_reads/{sample}_rmdup.bam'
-  shell:
-    'samtools rmdup {input} {output}'
-
-rule rmAmbigReads:
-  input:
-    'mapped_reads/{sample}_rmdup.bam'
-  output:
-    'mapped_reads/{sample}_unique.bam'
-  threads: 8
+    collateBam = temp('mapped_reads/{sample}_coallate.bam'),
+    fixmateBam = temp('mapped_reads/{sample}_fixmate.bam'),
+    sortedBam = 'mapped_reads/{sample}_sorted.bam',
+    rmdupBam = 'mapped_reads/{sample}_rmdup.bam',
+    rmdupFstat = 'flagstat/{sample}_rmdup_flagstat.txt',
+    uniqBam = 'mapped_reads/{sample}_unique.bam',
+    uniqFstat = 'flagstat/{sample}_unique_flagstat.txt',
+    concordBam = 'mapped_reads/{sample}_concord.bam',
+    concordFstat = 'flagstat/{sample}_concord_flagstat.txt'
   params:
-    minMapq = config['minMapq']
+    mapq = config['minMapq']
+  threads: config['nThreads']
   shell:
-    'samtools view -@ {threads} -b -q {params.minMapq} -o {output} '
-    '{input}'
+    'samtools collate -@ {threads} -o {output.collateBam} {input}; '
+    'samtools fixmate -@ {threads} -m {output.collateBam} '
+    '{output.fixmateBam}; '
+    'samtools sort -@ {threads} -o {output.sortedBam} {output.fixmateBam}; '
+    'samtools markdup -@ {threads} -r {output.sortedBam} {output.rmdupBam}; '
+    'samtools flagstat {output.rmdupBam} > {output.rmdupFstat}; '
+    'samtools view -@ {threads} -q {params.mapq} '
+    '-o {output.uniqBam} {output.rmdupBam};'
+    'samtools flagstat {output.uniqBam} > {output.uniqFstat}; '
+    'samtools view -@ {threads} -f 0x2 -o {output.concordBam} '
+    '{output.uniqBam}; '
+    'samtools flagstat {output.concordBam} > {output.concordFstat}'
 
 rule insertSz:
   input:
-    'mapped_reads/{sample}_unique.bam'
+    'mapped_reads/{sample}_concord.bam'
   output:
     pdf = 'insert_sz/{sample}_insert_sz.pdf',
     txt = 'insert_sz/{sample}_insert_sz.txt'
