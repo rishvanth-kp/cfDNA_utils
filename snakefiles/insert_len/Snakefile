@@ -94,12 +94,19 @@ rule insertSz:
   input:
     'mapped_reads/{sample}_concord.bam'
   output:
-    pdf = 'insert_sz/{sample}_insert_sz.pdf',
-    txt = 'insert_sz/{sample}_insert_sz.txt'
+    picardPdf = 'insert_sz/{sample}_insert_sz.pdf',
+    picardTxt = 'insert_sz/{sample}_insert_sz.txt',
+    normalizedPdf = 'insert_sz/{sample}_normalized.pdf'
+  params:
+    minInsertLen = config['minInsertLen'],
+    maxInsertLen = config['maxInsertLen'],
+    sampleName = '{sample}',
   log:
     'logs/{sample}_picard.log'
   benchmark:
     'logs/{sample}_picard.benchmark'
   shell:
     'java -jar {config[picard]} CollectInsertSizeMetrics I={input} '
-    'O={output.txt} H={output.pdf} 2> {log}'
+    'O={output.picardTxt} H={output.picardPdf} 2> {log}; '
+    '{config[normalzedInsertLen]} {output.picardTxt} {params.minInsertLen} '
+    '{params.maxInsertLen} {params.sampleName} {output.normalizedPdf}'

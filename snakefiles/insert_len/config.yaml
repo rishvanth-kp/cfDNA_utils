@@ -2,7 +2,7 @@ readsDir: /scratch2/kaliappa/cfdna/rb/frag_len_aug27/reads
 read1Suffix: _R1_001.fastq.gz
 read2Suffix: _R2_001.fastq.gz
 
-nThreads: 16  
+nThreads: 16
 
 fastqc: /scratch2/kaliappa/tools/fastqc/FastQC/fastqc
 
@@ -11,5 +11,7 @@ ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
 
 minMapq: 30
 
-
+minInsertLen: 50
+maxInsertLen: 250
 picard: /scratch2/kaliappa/tools/picard/picard.jar
+normalzedInsertLen: /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/insertLenDist.R
