@@ -7,9 +7,11 @@ __default__:
   acc: lc_lx1
 
 mapReads:
+  time: '24:00:00'
   cores: 16
-  mem: '32gb'
+  mem: '64gb'
 
 postProcessMaps:
+  time: '24:00:00'
   cores: 16
-  mem: '33gb'
+  mem: '64gb'
