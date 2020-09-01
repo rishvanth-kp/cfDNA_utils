@@ -8,10 +8,10 @@ __default__:
 
 mapReads:
   time: '24:00:00'
-  cores: 16
-  mem: '64gb'
+  cores: 12
+  mem: '32gb'
 
 postProcessMaps:
   time: '24:00:00'
-  cores: 16
-  mem: '64gb'
+  cores: 12
+  mem: '32gb'
