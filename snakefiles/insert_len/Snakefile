@@ -32,8 +32,10 @@ rule all:
 
 rule fastqc:
   input:
-    r1 = config['readsDir'] + '/{sample}_R1_001.fastq.gz',
-    r2 = config['readsDir'] + '/{sample}_R2_001.fastq.gz'
+    r1 = '{}/{}{}'.format(config['readsDir'], '{sample}',
+                          config['read1Suffix']),
+    r2 = '{}/{}{}'.format(config['readsDir'], '{sample}',
+                          config['read2Suffix'])
   output:
     o1 = 'fastqc/{sample}_R1_001_fastqc.html',
     o2 = 'fastqc/{sample}_R2_001_fastqc.html'
@@ -45,8 +47,10 @@ rule fastqc:
 rule mapReads:
   input:
     ref = config['ref'],
-    r1 = config['readsDir'] + '/{sample}_L2_1.fq.gz',
-    r2 = config['readsDir'] + '/{sample}_L2_2.fq.gz'
+    r1 = '{}/{}{}'.format(config['readsDir'], '{sample}',
+                          config['read1Suffix']),
+    r2 = '{}/{}{}'.format(config['readsDir'], '{sample}',
+                          config['read2Suffix'])
   output:
     sam = 'mapped_reads/{sample}.sam',
     flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
