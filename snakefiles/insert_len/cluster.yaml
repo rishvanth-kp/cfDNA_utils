@@ -4,7 +4,7 @@ __default__:
   cores: 1
   logout: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.out'
   logerror: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.err'
-  acc: lc_lx1
+  acc: kaliappa_550
 
 mapReads:
   time: '24:00:00'
@@ -13,5 +13,5 @@ mapReads:
 
 postProcessMaps:
   time: '24:00:00'
-  cores: 12
+  cores: 4
   mem: '32gb'

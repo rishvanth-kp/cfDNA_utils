@@ -2,7 +2,7 @@ readsDir: /scratch2/kaliappa/cfdna/rb/frag_len_misc/reads
 read1Suffix: _R1_001.fastq.gz
 read2Suffix: _R2_001.fastq.gz
 
-nThreads: 12
+nThreads: 14
 
 fastqc: /scratch2/kaliappa/tools/fastqc/FastQC/fastqc
 
