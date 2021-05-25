@@ -30,6 +30,9 @@ main <- function() {
   # col 1-4 (no header): region name, chr, chr start, chr end
   # one row per region. chr is encoded as 1-24 to keep it compatible
   # with the segmented csv file from the CNV app
+  # (using a csv file and encoding chromosomes are 1-24 are both bad
+  # designs. Ideally, a bed file should be used and chromosomes should 
+  # be encoded using the standard UCSC format.)
   regions <- read.csv(args[2], header = FALSE)
   names(regions) <- c("name", "chrom", "chrom.start", "chrom.end")
   # gain and loss threshold
@@ -48,15 +51,20 @@ main <- function() {
                                cna$chrompos >= regions[i,]$chrom.start &
                                cna$chrompos < regions[i,]$chrom.end),
                                4:ncol(cna)]
+
     region.median <- sapply(cna.in.region, median)
-
-    region.status <- rep("neutral", times=n.samples)
-    region.status[region.median >= gain.th] <- "gain"
-    region.status[region.median <= loss.th] <- "loss"
-
+    
+    if (nrow(cna.in.region) == 0) {
+      region.status <- rep("NA", times=n.samples) 
+    }
+    else {
+      region.status <- rep("neutral", times=n.samples)
+      region.status[region.median >= gain.th] <- "gain"
+      region.status[region.median <= loss.th] <- "loss"
+    }
+  
     out.median <- rbind(out.median, region.median)
     out.status <- rbind(out.status, region.status)
-
   }
 
   out.status <- as.data.frame(out.status, row.names = FALSE)
