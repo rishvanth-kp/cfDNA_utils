@@ -88,6 +88,7 @@ def main():
     out.close()
 
 
+
     statsOut = open(args.statsFile, 'w')
     i = 0
     header = 'region,count,mean,min,max'
@@ -96,22 +97,29 @@ def main():
         regions = regions.strip().split()
         line = '%s:%s-%s' % (regions[0], regions[1], regions[2])
         line += ',%d' % (sum(insertSzList[i].values()))
-        line += ',%f' % (average(list(insertSzList[i].keys()),
-                         weights=list(insertSzList[i].values())))
-        line += ',%d' % (min(insertSzList[i].values()))
-        line += ',%d' % (max(insertSzList[i].values()))
+        if (sum(insertSzList[i].values()) == 0):
+            line += ',0,0,0'
+        else:
+            line += ',%f' % (average(list(insertSzList[i].keys()),
+                             weights=list(insertSzList[i].values())))
+            line += ',%d' % (min(insertSzList[i].keys()))
+            line += ',%d' % (max(insertSzList[i].keys()))
         print(line, file=statsOut)
         i += 1
 
     line = 'all'
     line += ',%d' % (sum(insertSzList[i].values()))
-    line += ',%f' % (average(list(insertSzList[i].keys()),
-                     weights=list(insertSzList[i].values())))
-    line += ',%d' % (min(insertSzList[i].values()))
-    line += ',%d' % (max(insertSzList[i].values()))
+    if (sum(insertSzList[i].values()) == 0):
+        line += ',0,0,0'
+    else:
+        line += ',%f' % (average(list(insertSzList[i].keys()),
+                         weights=list(insertSzList[i].values())))
+        line += ',%d' % (min(insertSzList[i].keys()))
+        line += ',%d' % (max(insertSzList[i].keys()))
     print(line, file=statsOut)
 
     statsOut.close()
+
 
 if __name__ == '__main__':
     main()
